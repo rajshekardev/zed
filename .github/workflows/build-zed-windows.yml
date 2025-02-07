@@ -1,0 +1,43 @@
+name: Build Zed for Windows
+
+on:
+  workflow_dispatch: # Manual build trigger
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Rust and Set Up Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
+
+      - name: Install Required Dependencies
+        run: |
+          choco install -y cmake visualstudio2022buildtools windows-sdk-10.0 python3
+          rustup component add rust-src
+          rustup target add x86_64-pc-windows-msvc
+
+      - name: Set Up Visual Studio Environment
+        run: |
+          "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find "**\vcvars64.bat" > vs_path.txt
+          set /p VS_ENV_PATH=<vs_path.txt
+          call "%VS_ENV_PATH%"
+
+      - name: Build Zed
+        run: cargo build --release
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Zed-Windows-EXE
+          path: target/release/zed.exe
