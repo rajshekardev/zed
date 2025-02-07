@@ -30,8 +30,9 @@ jobs:
       - name: Set Up Visual Studio Environment
         run: |
           "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find "**\vcvars64.bat" > vs_path.txt
-          set /p VS_ENV_PATH=<vs_path.txt
+          FOR /F "delims=" %%A IN (vs_path.txt) DO set "VS_ENV_PATH=%%A"
           call "%VS_ENV_PATH%"
+        shell: cmd
 
       - name: Build Zed
         run: cargo build --release
